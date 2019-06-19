@@ -18,6 +18,7 @@ function is_crashed() {
 
 while true; do
     if $(is_crashed); then
+        # commands for fixing touch input
         echo 0 | sudo tee $IPTS_MODE_FILE
         echo 0 | sudo tee $IPTS_MODE_FILE
         sleep 0.5
