@@ -1,14 +1,14 @@
-From cc790199e403ed5d1930eab552d8268559ac1eb4 Mon Sep 17 00:00:00 2001
+From 8fa50c0cd7a8c6f4412c2b171e362365c67f28fd Mon Sep 17 00:00:00 2001
 From: "Hayataka@kitakar5525" <Hayataka@kitakar5525>
 Date: Thu, 20 Jun 2019 16:19:15 +0900
-Subject: [PATCH] ipts: add recovery thread
+Subject: ipts: add recovery thread
 
 ---
- drivers/misc/ipts/ipts-mei.c | 49 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
+ drivers/misc/ipts/ipts-mei.c | 66 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
 
 diff --git a/drivers/misc/ipts/ipts-mei.c b/drivers/misc/ipts/ipts-mei.c
-index 199e49cb8..3d4689121 100644
+index 199e49cb8..0f166daad 100644
 --- a/drivers/misc/ipts/ipts-mei.c
 +++ b/drivers/misc/ipts/ipts-mei.c
 @@ -20,6 +20,7 @@
@@ -19,7 +19,7 @@ index 199e49cb8..3d4689121 100644
  
  #include "ipts.h"
  #include "ipts-hid.h"
-@@ -27,6 +28,7 @@
+@@ -27,11 +28,22 @@
  #include "ipts-mei-msgs.h"
  #include "ipts-binary-spec.h"
  #include "ipts-state.h"
@@ -27,7 +27,22 @@ index 199e49cb8..3d4689121 100644
  
  #define IPTS_DRIVER_NAME	"ipts"
  #define IPTS_MEI_UUID		UUID_LE(0x3e8d0870, 0x271a, 0x4208, \
-@@ -158,6 +160,52 @@ static int ipts_mei_cl_event_thread(void *data)
+ 				0x8e, 0xb5, 0x9a, 0xcb, 0x94, 0x02, 0xae, 0x04)
+ 
++static bool enable_recovery_thread = false;
++module_param(enable_recovery_thread, bool, 0400);
++MODULE_PARM_DESC(enable_recovery_thread,
++		"Enable recovery thread (fix crashes automatically) (default:false)");
++
++static int recovery_sleep_msec = 1000;
++module_param(recovery_sleep_msec, int, 0600);
++MODULE_PARM_DESC(recovery_sleep_msec,
++		"Recovery thread sleep in millisecond (default:1000)");
++
+ static struct mei_cl_device_id ipts_mei_cl_tbl[] = {
+ 	{ "", IPTS_MEI_UUID, MEI_CL_VERSION_ANY},
+ 	{}
+@@ -158,6 +170,59 @@ static int ipts_mei_cl_event_thread(void *data)
  	return 0;
  }
  
@@ -38,7 +53,9 @@ index 199e49cb8..3d4689121 100644
 +	ipts_info_t *ipts = (ipts_info_t *)data;
 +	char fw_sts_str[MEI_FW_STATUS_STR_SZ];
 +
-+	while (!kthread_should_stop()) {
++	pr_info("ipts: >> start recovery thread\n");
++
++	while (!kthread_should_stop() && enable_recovery_thread) {
 +		mei_fw_status_str(ipts->cldev->bus, fw_sts_str, MEI_FW_STATUS_STR_SZ);
 +
 +		/*
@@ -66,13 +83,18 @@ index 199e49cb8..3d4689121 100644
 +
 +			/*
 +			 * Need some amount of sleep for `fw_status` to be updated
-+			 * Or this block will be called multiple times. (It is harmless, though.)
++			 * Or this block will be called multiple times if `recovery_sleep_msec` is too low.
++			 *  (It is harmless, though.)
++			 * 
 +			 */
 +			msleep(1000);
 +		}
++
++		/* sleep for lower CPU usage */
++		msleep(recovery_sleep_msec);
 +	}
 +
-+	ipts_dbg(ipts, "!! end recovery_thread loop !!\n");
++	pr_info("ipts: >> end recovery_thread loop\n");
 +
 +	return 0;
 +}
@@ -80,7 +102,7 @@ index 199e49cb8..3d4689121 100644
  static void init_work_func(struct work_struct *work)
  {
  	ipts_info_t *ipts = container_of(work, ipts_info_t, init_work);
-@@ -203,6 +251,7 @@ static int ipts_mei_cl_probe(struct mei_cl_device *cldev,
+@@ -203,6 +268,7 @@ static int ipts_mei_cl_probe(struct mei_cl_device *cldev,
  
  	ipts->event_loop = kthread_run(ipts_mei_cl_event_thread, (void*)ipts,
  							"ipts_event_thread");
