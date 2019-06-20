@@ -1,14 +1,14 @@
-From 8fa50c0cd7a8c6f4412c2b171e362365c67f28fd Mon Sep 17 00:00:00 2001
+From e60997744d05e44a3b6b442a9412179134033765 Mon Sep 17 00:00:00 2001
 From: "Hayataka@kitakar5525" <Hayataka@kitakar5525>
 Date: Thu, 20 Jun 2019 16:19:15 +0900
-Subject: ipts: add recovery thread
+Subject: [PATCH] ipts: add recovery thread
 
 ---
- drivers/misc/ipts/ipts-mei.c | 66 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 66 insertions(+)
+ drivers/misc/ipts/ipts-mei.c | 65 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 65 insertions(+)
 
 diff --git a/drivers/misc/ipts/ipts-mei.c b/drivers/misc/ipts/ipts-mei.c
-index 199e49cb8..0f166daad 100644
+index 199e49cb8..33f4dffee 100644
 --- a/drivers/misc/ipts/ipts-mei.c
 +++ b/drivers/misc/ipts/ipts-mei.c
 @@ -20,6 +20,7 @@
@@ -42,7 +42,7 @@ index 199e49cb8..0f166daad 100644
  static struct mei_cl_device_id ipts_mei_cl_tbl[] = {
  	{ "", IPTS_MEI_UUID, MEI_CL_VERSION_ANY},
  	{}
-@@ -158,6 +170,59 @@ static int ipts_mei_cl_event_thread(void *data)
+@@ -158,6 +170,58 @@ static int ipts_mei_cl_event_thread(void *data)
  	return 0;
  }
  
@@ -85,12 +85,11 @@ index 199e49cb8..0f166daad 100644
 +			 * Need some amount of sleep for `fw_status` to be updated
 +			 * Or this block will be called multiple times if `recovery_sleep_msec` is too low.
 +			 *  (It is harmless, though.)
-+			 * 
 +			 */
 +			msleep(1000);
 +		}
 +
-+		/* sleep for lower CPU usage */
++		/* sleep to lower CPU usage */
 +		msleep(recovery_sleep_msec);
 +	}
 +
@@ -102,7 +101,7 @@ index 199e49cb8..0f166daad 100644
  static void init_work_func(struct work_struct *work)
  {
  	ipts_info_t *ipts = container_of(work, ipts_info_t, init_work);
-@@ -203,6 +268,7 @@ static int ipts_mei_cl_probe(struct mei_cl_device *cldev,
+@@ -203,6 +267,7 @@ static int ipts_mei_cl_probe(struct mei_cl_device *cldev,
  
  	ipts->event_loop = kthread_run(ipts_mei_cl_event_thread, (void*)ipts,
  							"ipts_event_thread");
