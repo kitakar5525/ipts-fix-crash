@@ -1,15 +1,21 @@
 #!/bin/bash
 
-readonly STR_CRASH="547D"
-readonly IPTS_DBG_INFO_FILE="/sys/kernel/debug/ipts/debug"
+# When the touch crash happens, the sixth number (zero-based) of `fw_status`
+# will become '7'.
+readonly NUM_CRASH="7"
+# TODO: Is this path vaild on all the other devices? `0000:00:16.4` may vary between devices. 
+# I want to know a permanent path. This path is valid at least on SB1.
+# Also, we can't use `/sys/class/mei/mei0/fw_status` because the number of meiN may vary after reboot.
+readonly MEI_FW_STATUS_FILE=$(sudo find /sys/devices/pci0000:00/0000:00:16.4 -name fw_status)
 readonly IPTS_MODE_FILE="/sys/kernel/debug/ipts/mode"
 
 
 
 function is_crashed() {
-    fw_status=$(sudo cat $IPTS_DBG_INFO_FILE | grep "fw status" | awk -F": " '{print $3}')
-    str=${fw_status:4:4}
-    if [ $str = $STR_CRASH ]; then
+    fw_status=$(cat $MEI_FW_STATUS_FILE)
+    num=${fw_status:6:1} # if $num is 7, we consider ME FW is being wrong.
+    
+    if [ $num = $NUM_CRASH ]; then
         echo true
     else
         echo false
