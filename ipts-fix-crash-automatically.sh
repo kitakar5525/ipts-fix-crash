@@ -25,12 +25,17 @@ function is_crashed() {
 while true; do
     if $(is_crashed); then
         # commands for fixing touch input
+
+        # change sensor mode
         echo 0 | sudo tee $IPTS_MODE_FILE
         echo 0 | sudo tee $IPTS_MODE_FILE
         sleep 0.5
         echo 1 | sudo tee $IPTS_MODE_FILE
         echo "touch fixed."
         sleep 0.5
+
+        # Or display off
+        # xset dpms force off && xset dpms force on
     fi
 
     sleep 1
