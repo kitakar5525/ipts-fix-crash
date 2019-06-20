@@ -6,7 +6,7 @@ readonly NUM_CRASH="7"
 # TODO: Is this path vaild on all the other devices? `0000:00:16.4` may vary between devices. 
 # I want to know a permanent path. This path is valid at least on SB1.
 # Also, we can't use `/sys/class/mei/mei0/fw_status` because the number of meiN may vary after reboot.
-readonly MEI_FW_STATUS_FILE=$(sudo find /sys/devices/pci0000:00/0000:00:16.4 -name fw_status)
+readonly MEI_FW_STATUS_FILE=$(find /sys/devices/pci0000:00/0000:00:16.4 -name fw_status)
 readonly IPTS_MODE_FILE="/sys/kernel/debug/ipts/mode"
 
 
