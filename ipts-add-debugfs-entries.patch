@@ -1,4 +1,4 @@
-From 8aec14280ee471b22df0bd4d4a08e02e872a9ae5 Mon Sep 17 00:00:00 2001
+From 0ea32c23ba528257557c82ab1714156a39c0551b Mon Sep 17 00:00:00 2001
 From: "Hayataka@kitakar5525" <Hayataka@kitakar5525>
 Date: Thu, 20 Jun 2019 16:19:15 +0900
 Subject: [PATCH] ipts: add debugfs entries
@@ -13,7 +13,7 @@ Add three debugfs entries:
  1 file changed, 116 insertions(+)
 
 diff --git a/drivers/misc/ipts/ipts-dbgfs.c b/drivers/misc/ipts/ipts-dbgfs.c
-index 1c5c92f7d..76578b274 100644
+index 1c5c92f7d..c95a567aa 100644
 --- a/drivers/misc/ipts/ipts-dbgfs.c
 +++ b/drivers/misc/ipts/ipts-dbgfs.c
 @@ -20,9 +20,13 @@
@@ -108,7 +108,7 @@ index 1c5c92f7d..76578b274 100644
 +
 +	if (cnt < sizeof(ipts_debug_fmt) - 3)
 +		return -EINVAL;
-+	
++
 +	len = scnprintf(dbg_info, 1024, ipts_debug_fmt,
 +							fw_sts_str,
 +							*db, *(db+1),
