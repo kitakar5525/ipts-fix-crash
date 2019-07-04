@@ -1,0 +1,49 @@
+From 036e4e1cff8e2dad4a4a0527bd181eb9dbbd4426 Mon Sep 17 00:00:00 2001
+From: kitakar5525 <34676735+kitakar5525@users.noreply.github.com>
+Date: Thu, 4 Jul 2019 05:50:21 +0900
+Subject: [PATCH] ipts: fix crash
+
+---
+ drivers/misc/ipts/ipts-hid.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/misc/ipts/ipts-hid.c b/drivers/misc/ipts/ipts-hid.c
+index e85844dc1..0473d8706 100644
+--- a/drivers/misc/ipts/ipts-hid.c
++++ b/drivers/misc/ipts/ipts-hid.c
+@@ -350,7 +350,7 @@ static int handle_outputs(ipts_info_t *ipts, int parallel_idx)
+ 	ipts_buffer_info_t *output_buf, *fb_buf = NULL;
+ 	u8 *input_report, *payload;
+ 	u32 transaction_id;
+-	int i, payload_size, ret = 0, header_size;
++	int i, payload_size, header_size;
+ 
+ 	header_size = sizeof(kernel_output_buffer_header_t);
+ 	output_buf = ipts_get_output_buffers_by_parallel_id(ipts, parallel_idx);
+@@ -415,11 +415,18 @@ static int handle_outputs(ipts_info_t *ipts, int parallel_idx)
+ 		}
+ 	}
+ 
+-	if (fb_buf) {
+-		ret = ipts_send_feedback(ipts, parallel_idx, transaction_id);
+-		if (ret)
+-			return ret;
+-	}
++	/* 
++	 * ipts_send_feedback() causes touch inputs to crash on some
++	 * platforms, especially on Surface Pro 4 and Surface Book 1.
++	 * 
++	 * Touch and pen issue persists · Issue #374 · jakeday/linux-surface
++	 * https://github.com/jakeday/linux-surface/issues/374#issuecomment-508234110
++	 */
++	// if (fb_buf) {
++	// 	ret = ipts_send_feedback(ipts, parallel_idx, transaction_id);
++	// 	if (ret)
++	// 		return ret;
++	// }
+ 
+ 	return 0;
+ }
+-- 
+2.22.0
+
