@@ -1,6 +1,18 @@
 # 0001-call-ipts_send_feedback-in-handle_outputs-only-when-.patch
 
-The patched code will look like this:
+## warning: ‘transaction_id’ may be used uninitialized in this function
+
+```
+drivers/misc/ipts/ipts-hid.c: In function ‘ipts_handle_processed_data’:
+drivers/misc/ipts/ipts-hid.c:433:7: warning: ‘transaction_id’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+   ret = ipts_send_feedback(ipts, parallel_idx, transaction_id);
+   ~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/misc/ipts/ipts-hid.c:352:6: note: ‘transaction_id’ was declared here
+  u32 transaction_id;
+      ^~~~~~~~~~~~~~
+```
+
+## The patched code will look like this
 ```c
 static int handle_outputs(ipts_info_t *ipts, int parallel_idx)
 {
